@@ -3,6 +3,7 @@ package tukano.impl.rest;
 import java.net.URI;
 import java.util.logging.Logger;
 
+import jakarta.ws.rs.core.Application;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -12,7 +13,7 @@ import utils.IP;
 import utils.Props;
 
 
-public class TukanoRestServer {
+public class TukanoRestServer extends Application {
 	final private static Logger Log = Logger.getLogger(TukanoRestServer.class.getName());
 
 	static final String INETADDR_ANY = "0.0.0.0";

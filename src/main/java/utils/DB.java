@@ -11,6 +11,7 @@ import tukano.api.Result;
 public class DB {
 
 	public static <T> List<T> sql(String query, Class<T> clazz) {
+
 		return Hibernate.getInstance().sql(query, clazz);
 	}
 	
@@ -19,14 +20,17 @@ public class DB {
 	}
 	
 	public static <T> Result<T> getOne(String id, Class<T> clazz) {
+
 		return Hibernate.getInstance().getOne(id, clazz);
 	}
 	
 	public static <T> Result<T> deleteOne(T obj) {
+
 		return Hibernate.getInstance().deleteOne(obj);
 	}
 	
 	public static <T> Result<T> updateOne(T obj) {
+
 		return Hibernate.getInstance().updateOne(obj);
 	}
 	

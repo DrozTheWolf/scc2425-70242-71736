@@ -63,8 +63,9 @@ public class CloudBlobIO {
         }
     }
 
-    public void read( File from, int chunkSize, Consumer<byte[]> sink) {
-        try (var fis = new FileInputStream(from)) {
+    public void read( String path, int chunkSize, Consumer<byte[]> sink) {
+        BlobClient blobClient = contClient.getBlobClient(path);
+        try (var fis = blobClient.openInputStream()) {
             int n;
             var chunk = new byte[chunkSize];
             while ((n = fis.read(chunk)) > 0)
@@ -72,6 +73,19 @@ public class CloudBlobIO {
         } catch (IOException x) {
             throw new RuntimeException(x);
         }
+    }
+
+    public boolean delete( String path ) {
+        BlobClient blobClient = contClient.getBlobClient(path);
+        try {
+            if( blobClient.exists() ) {
+                blobClient.delete();
+                return true;
+            }
+        } catch( Exception x ) {
+            x.printStackTrace();
+        }
+        return false;
     }
 
 

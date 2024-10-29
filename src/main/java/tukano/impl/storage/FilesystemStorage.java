@@ -70,7 +70,7 @@ public class FilesystemStorage implements BlobStorage {
 		if( ! cloudIO.blobExists(path) )
 			return error(NOT_FOUND);
 		
-		// cloudIO.read( path, CHUNK_SIZE, sink );
+		cloudIO.read( path, CHUNK_SIZE, sink );
 		return ok();
 	}
 	
@@ -79,17 +79,11 @@ public class FilesystemStorage implements BlobStorage {
 		if (path == null)
 			return error(BAD_REQUEST);
 
-		try {
-			var file = toFile( path );
-			Files.walk(file.toPath())
-			.sorted(Comparator.reverseOrder())
-			.map(Path::toFile)
-			.forEach(File::delete);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return error(INTERNAL_ERROR);
+        if ( !cloudIO.delete(path)) {
+			return error(NOT_FOUND);
 		}
-		return ok();
+
+        return ok();
 	}
 	
 	private File toFile(String path) {

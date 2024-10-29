@@ -14,7 +14,6 @@ import java.util.function.Consumer;
 
 final public class IO {
 
-
 	public static void write( File out, byte[] data ) {
 		try {
 			System.out.println("WRITE>>>>" + out);
