@@ -20,7 +20,7 @@ public class CloudBlobIO {
     private final BlobContainerClient contClient;
 
     // name of the blobs container in azure that is always the same
-    private static final String BLOBS_CONTAINER_NAME = "blobs";
+    private static final String BLOBS_CONTAINER_NAME = "shorts";
 
     public CloudBlobIO(){
 
