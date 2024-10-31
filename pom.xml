@@ -20,7 +20,7 @@
                 <configuration>
                     <schemaVersion>V2</schemaVersion>
                     <pricingTier>F1</pricingTier>
-                    <region>northeurope</region>
+                    <region>westeurope</region>
                     <runtime>
                         <os>linux</os>
                         <javaVersion>Java 17</javaVersion>
