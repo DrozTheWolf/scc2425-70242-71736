@@ -28,16 +28,14 @@ public class CloudBlobIO {
 
         String infoBlobStorage = PropsCloud.get("BlobStoreConnection", "");
 
-        // TODO THIS MIGHT BE WRONG PLZ CHECK
-        String blobKey = infoBlobStorage.split(";")[2].split("=")[1];
-
         contClient = new BlobContainerClientBuilder()
-                .connectionString(blobKey)
+                .connectionString(infoBlobStorage)
                 .containerName(BLOBS_CONTAINER_NAME)
                 .buildClient();
     }
 
     public boolean blobExists(String blobPath) {
+        System.out.println("CEHCKING IF BLOB EXSISTSTUSUHRUWUHDAIU");
         BlobClient blobClient = contClient.getBlobClient(blobPath);
         return blobClient.exists();
     }
