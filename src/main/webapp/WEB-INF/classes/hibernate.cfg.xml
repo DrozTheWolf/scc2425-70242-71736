@@ -3,10 +3,12 @@
 	<session-factory>
 		<!-- JDBC Database connection settings -->
 		<property name="connection.driver_class">org.postgresql.Driver</property>
-		<property name="connection.url">jdbc:postgresql://c-scc2425-70242c.a6nrqz2kn2r5it.postgres.cosmos.azure.com/citus</property>
+		<property name="connection.url">jdbc:postgresql://c-torcha71736.lcku3drfurtqir.postgres.cosmos.azure.com:5432/citus</property>
 		<property name="connection.username">citus</property>
-		<property name="connection.password">supersafe123!</property>
+		<property name="connection.password">Secret123!</property>
+		<property name="hibernate.connection.ssl">true</property>
 		<property name="connection.sslmode">require</property>
+		<property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
 		<!-- JDBC connection pool settings ... using built-in test pool -->
 		<property name="connection.pool_size">64</property>
 		<!-- Echo the SQL to stdout -->
@@ -15,8 +17,6 @@
 		<property name="current_session_context_class">thread</property>
 		<!-- Schema generation strategy -->
 		<property name="hbm2ddl.auto">update</property>
-		<!-- Drop and re-create the database schema on startup -->
-		<property name="hbm2ddl.auto">create-drop</property>
 		<!-- dbcp connection pool configuration -->
 		<property name="hibernate.dbcp.initialSize">5</property>
 		<property name="hibernate.dbcp.maxTotal">20</property>

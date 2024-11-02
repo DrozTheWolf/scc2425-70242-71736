@@ -35,7 +35,6 @@ public class CloudBlobIO {
     }
 
     public boolean blobExists(String blobPath) {
-        System.out.println("CEHCKING IF BLOB EXSISTSTUSUHRUWUHDAIU");
         BlobClient blobClient = contClient.getBlobClient(blobPath);
         return blobClient.exists();
     }
