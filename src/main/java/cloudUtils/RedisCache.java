@@ -60,7 +60,7 @@ public class RedisCache {
         } else if (obj instanceof Short) {
             return SHORT_KEY + ((Short) obj).getShortId();
         } else {
-            Log.info("buildClassToString() object not be cached");
+            Log.info("buildClassToString() object not be cached " + obj);
             return NO_CACHE;
         }
     }
@@ -72,7 +72,7 @@ public class RedisCache {
         } else if (clazz == Short.class) {
             return SHORT_KEY + id;
         } else {
-            Log.info("buildClassToString() object not to be cached");
+            Log.info("buildClassToString() object not to be cached " + id);
             return NO_CACHE;
         }
     }

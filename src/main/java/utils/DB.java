@@ -5,9 +5,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import cloudUtils.HibernateCache;
 import com.azure.cosmos.CosmosContainer;
-import utils.Hibernate;
 import org.hibernate.Session;
 import cloudUtils.NoSQLCosmos;
+import cloudUtils.NoSQLCosmosCache;
 
 import tukano.api.Result;
 
@@ -24,7 +24,7 @@ public class DB {
 		if (usePostegre){
 			return useCache ? HibernateCache.getInstance().sql(query, clazz) : Hibernate.getInstance().sql(query, clazz);
 		} else {
-			return useCache ? null : NoSQLCosmos.getInstance().query(clazz, query).value();
+			return useCache ? NoSQLCosmosCache.getInstance().query(clazz, query).value() : NoSQLCosmos.getInstance().query(clazz, query).value();
 		}
 	}
 	
@@ -45,7 +45,7 @@ public class DB {
 			return useCache ? HibernateCache.getInstance().getOne(id, clazz)
 					: Hibernate.getInstance().getOne(id, clazz);
 		} else {
-			return useCache ? null : NoSQLCosmos.getInstance().getOne(id, clazz);
+			return useCache ? NoSQLCosmosCache.getInstance().getOne(id, clazz) : NoSQLCosmos.getInstance().getOne(id, clazz);
 		}
 	}
 	
@@ -55,9 +55,8 @@ public class DB {
 			return useCache ? HibernateCache.getInstance().deleteOne(obj)
 					: Hibernate.getInstance().deleteOne(obj);
 		} else {
-			return useCache ? null : NoSQLCosmos.getInstance().deleteOne(obj);
+			return useCache ? NoSQLCosmosCache.getInstance().deleteOne(obj) : NoSQLCosmos.getInstance().deleteOne(obj);
 		}
-
 	}
 	
 	public static <T> Result<T> updateOne(T obj) {
@@ -66,7 +65,7 @@ public class DB {
 			return useCache ? HibernateCache.getInstance().updateOne(obj)
 					: Hibernate.getInstance().updateOne(obj);
 		} else {
-			return useCache ? null : NoSQLCosmos.getInstance().updateOne(obj);
+			return useCache ? NoSQLCosmosCache.getInstance().updateOne(obj) : NoSQLCosmos.getInstance().updateOne(obj);
 		}
 
 	}
@@ -77,7 +76,7 @@ public class DB {
 			return useCache ? Result.errorOrValue(HibernateCache.getInstance().persistOne(obj), obj)
 					: Result.errorOrValue(Hibernate.getInstance().persistOne(obj), obj);
 		} else {
-			return useCache ? null : NoSQLCosmos.getInstance().insertOne(obj);
+			return useCache ? NoSQLCosmosCache.getInstance().insertOne(obj) : NoSQLCosmos.getInstance().insertOne(obj);
 		}
 
 	}
