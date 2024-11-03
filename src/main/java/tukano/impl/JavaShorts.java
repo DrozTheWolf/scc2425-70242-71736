@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 import com.azure.cosmos.models.CosmosItemRequestOptions;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
+import com.azure.cosmos.util.CosmosPagedIterable;
 import tukano.api.Blobs;
 import tukano.api.Result;
 import tukano.api.Short;
@@ -96,9 +97,12 @@ public class JavaShorts implements Shorts {
 
 						cosmos.deleteItem(shrt, new CosmosItemRequestOptions()).getItem();
 
-						var query = format("DELETE Likes l WHERE l.shortId = '%s'", shortId);
+						String query = format("SELECT * FROM Likes l WHERE l.shortId = '%s'", shortId);
+						CosmosPagedIterable<Likes> likesToDelete = cosmos.queryItems(query, new CosmosQueryRequestOptions(), Likes.class);
 
-						// TODO do previous query
+						for (Likes like : likesToDelete.stream().toList()) {
+							cosmos.deleteItem(like, new CosmosItemRequestOptions()).getItem();
+						}
 
 						JavaBlobs.getInstance().delete(shrt.getBlobUrl(), Token.get() );
 					});
@@ -213,17 +217,29 @@ public class JavaShorts implements Shorts {
 			return DB.transactionNoSQL( (cosmos) -> {
 
 				//delete shorts
-				var query1 = format("DELETE Short s WHERE s.ownerId = '%s'", userId);
-				// hibernate.createQuery(query1, Short.class).executeUpdate();
+				var queryShorts = format("SELECT * FROM Short s WHERE s.ownerId = '%s'", userId);
+				var shortsToDelete = cosmos.queryItems(queryShorts, new CosmosQueryRequestOptions(), Short.class);
+
+				for (Short s : shortsToDelete.stream().toList()) {
+					cosmos.deleteItem(s, new CosmosItemRequestOptions()).getItem();
+				}
 
 				//delete follows
-				var query2 = format("DELETE Following f WHERE f.follower = '%s' OR f.followee = '%s'", userId, userId);
-				// hibernate.createQuery(query2, Following.class).executeUpdate();
+				var queryFollows = format("SELECT * FROM Following f WHERE f.follower = '%s' OR f.followee = '%s'", userId, userId);
+				var followsToDelete = cosmos.queryItems(queryFollows, new CosmosQueryRequestOptions(), Following.class);
+
+				for (Following f : followsToDelete.stream().toList()) {
+					cosmos.deleteItem(f, new CosmosItemRequestOptions()).getItem();
+				}
 
 				//delete likes
-				var query3 = format("DELETE Likes l WHERE l.ownerId = '%s' OR l.userId = '%s'", userId, userId);
-				// hibernate.createQuery(query3, Likes.class).executeUpdate();
 
+				var queryLikes = format("SELECT * FROM Likes l WHERE l.ownerId = '%s' OR l.userId = '%s'", userId, userId);
+				var likesToDelete = cosmos.queryItems(queryLikes, new CosmosQueryRequestOptions(), Likes.class);
+
+				for (Likes l : likesToDelete.stream().toList()) {
+					cosmos.deleteItem(l, new CosmosItemRequestOptions()).getItem();
+				}
 			});
 		}
 

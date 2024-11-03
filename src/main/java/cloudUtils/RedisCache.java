@@ -22,8 +22,9 @@ public class RedisCache {
 
     private static final String USER_KEY = "user:";
     private static final String SHORT_KEY = "short:";
-    private static final String FOLLOW_KEY = "follow:";
-    private static final String LIKE_KEY = "like:";
+
+    // used to determine that clases Likes and Follow are not to be cached
+    private static final String NO_CACHE = "NO_CACHE";
 
     private static JedisPool instance;
     final private static Logger Log = Logger.getLogger(RedisCache.class.getName());
@@ -56,8 +57,8 @@ public class RedisCache {
         } else if (obj instanceof Short) {
             return SHORT_KEY + ((Short) obj).getShortId();
         } else {
-            Log.info("buildClassToString() failed cause obj is not instanceOf Anything");
-            throw new RuntimeException();
+            Log.info("buildClassToString() object not be cached");
+            return NO_CACHE;
         }
     }
 
@@ -68,15 +69,21 @@ public class RedisCache {
         } else if (clazz == Short.class) {
             return SHORT_KEY + id;
         } else {
-            Log.info("buildClassToString() failed cause obj is not instanceOf Anything");
-            throw new RuntimeException();
+            Log.info("buildClassToString() object not to be cached");
+            return NO_CACHE;
         }
     }
 
     public static void deleteOne(Object obj, JedisPool pool){
-        Log.info("Deleted from cache");
+
         try (Jedis jedis = pool.getResource()){
             String key = buildClassToString(obj);
+
+            if (key.equals(NO_CACHE)){
+                return;
+            }
+
+            Log.info("Deleted from cache " + key);
             jedis.del(key);
         } catch (Exception e){
             e.printStackTrace();
@@ -86,12 +93,18 @@ public class RedisCache {
 
     // puts one object to cache
     public static void putOne(Object obj, JedisPool pool){
-        Log.info("Put an Object in Cache");
+
         try (Jedis jedis = pool.getResource()) {
 
             String key = buildClassToString(obj);
+
+            if (key.equals(NO_CACHE)){
+                return;
+            }
+
             String value = JSON.encode( obj );
 
+            Log.info("Put an Object in Cache " + key);
             jedis.set(key, value);
 
         } catch (Exception e) {
@@ -102,18 +115,22 @@ public class RedisCache {
 
     // id corresponds with an object ID in database
     public static <T> T getOne(Object id, Class<T> clazz, JedisPool pool) {
-        Log.info("Get Object from Cache");
+
         try (Jedis jedis = pool.getResource()){
 
             String key = buildClassToString((String) id, clazz);
+
+            if (key.equals(NO_CACHE)){
+                return null;
+            }
+
             String value = jedis.get(key);
 
             if (value == null){
                 return null;
             }
 
-            // String type = key.split(":")[0];
-
+            Log.info("Get Object from Cache " + key);
             return JSON.decode(value, clazz);
         } catch (Exception e) {
             e.printStackTrace();
