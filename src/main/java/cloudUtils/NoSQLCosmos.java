@@ -16,7 +16,6 @@ import cloudUtils.PropsCloud;
 
 public class NoSQLCosmos {
 
-    private static final String DB_NAME = "cosmos71736";
     private static final String CONTAINER = "users";
 
     private static NoSQLCosmos instance;
@@ -30,8 +29,8 @@ public class NoSQLCosmos {
             return instance;
 
         PropsCloud.load(PropsCloud.PROPS_PATH);
-        String connect_url = PropsCloud.get("REDIS_URL", "");
-        String connect_key = PropsCloud.get("REDIS_KEY", "");
+        String connect_url = PropsCloud.get("COSMOSDB_URL", "");
+        String connect_key = PropsCloud.get("COSMOSDB_KEY", "");
 
         CosmosClient client = new CosmosClientBuilder()
                 .endpoint(connect_url)
@@ -54,7 +53,11 @@ public class NoSQLCosmos {
     private synchronized void init() {
         if( db != null)
             return;
-        db = client.getDatabase(DB_NAME);
+
+        PropsCloud.load(PropsCloud.PROPS_PATH);
+        String connect_db = PropsCloud.get("COSMOSDB_DATABASE", "");
+
+        db = client.getDatabase(connect_db);
         container = db.getContainer(CONTAINER);
     }
 

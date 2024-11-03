@@ -13,10 +13,10 @@ import tukano.api.Result;
 
 public class DB {
 
-	public static final boolean useCache = true;
+	public static final boolean useCache = false;
 
 	// if false then use NoSQL
-	public static final boolean usePostegre = true;
+	public static final boolean usePostegre = false;
 
 
 	public static <T> List<T> sql(String query, Class<T> clazz) {
