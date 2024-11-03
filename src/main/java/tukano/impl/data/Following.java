@@ -8,19 +8,23 @@ import jakarta.persistence.Id;
 @Entity
 public class Following{
 
-	@Id 
+	@Id
+	String id;
+
 	String follower;
-	
-	@Id 
+
 	String followee;
 
 	Following() {}
 
 	public Following(String follower, String followee) {
 		super();
+		this.id = followee + "-" + follower;
 		this.follower = follower;
 		this.followee = followee;
 	}
+
+	public String getId() { return id; }
 
 	public String getFollower() {
 		return follower;

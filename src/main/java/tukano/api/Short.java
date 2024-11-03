@@ -1,5 +1,6 @@
 package tukano.api;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import tukano.impl.Token;
@@ -17,6 +18,7 @@ import tukano.impl.Token;
 public class Short {
 	
 	@Id
+	@JsonProperty("id")
 	String shortId;
 	String ownerId;
 	String blobUrl;
