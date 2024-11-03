@@ -112,10 +112,9 @@ public class Hibernate {
 			return Result.error(ErrorCode.CONFLICT);
 		}  
 		catch (Exception e) {
+			e.printStackTrace();
 			if( tx != null )
 				tx.rollback();
-			
-			e.printStackTrace();
 			throw e;
 		}
 	}
