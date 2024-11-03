@@ -26,6 +26,9 @@ public class RedisCache {
     // used to determine that clases Likes and Follow are not to be cached
     private static final String NO_CACHE = "NO_CACHE";
 
+    // time in seconds for a key to expire if no operations are done in it
+    private static final int KEY_EXPIRATION = 100;
+
     private static JedisPool instance;
     final private static Logger Log = Logger.getLogger(RedisCache.class.getName());
 
@@ -106,6 +109,7 @@ public class RedisCache {
 
             Log.info("Put an Object in Cache " + key);
             jedis.set(key, value);
+            jedis.expire(key, KEY_EXPIRATION);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -131,6 +135,7 @@ public class RedisCache {
             }
 
             Log.info("Get Object from Cache " + key);
+            jedis.expire(key, KEY_EXPIRATION);
             return JSON.decode(value, clazz);
         } catch (Exception e) {
             e.printStackTrace();
