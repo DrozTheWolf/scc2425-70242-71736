@@ -112,7 +112,7 @@ public class NoSQLCosmos {
             init();
             return Result.ok(supplierFunc.get());
         } catch( CosmosException ce ) {
-            //ce.printStackTrace();
+            ce.printStackTrace();
             return Result.error ( errorCodeFromStatus(ce.getStatusCode() ));
         } catch( Exception x ) {
             x.printStackTrace();
