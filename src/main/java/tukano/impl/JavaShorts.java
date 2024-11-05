@@ -9,16 +9,13 @@ import static tukano.api.Result.ok;
 import static tukano.api.Result.ErrorCode.BAD_REQUEST;
 import static tukano.api.Result.ErrorCode.FORBIDDEN;
 import static utils.DB.getOne;
+import static utils.DB.sqlDB;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
-import com.azure.cosmos.models.CosmosItemRequestOptions;
-import com.azure.cosmos.models.CosmosQueryRequestOptions;
-import com.azure.cosmos.util.CosmosPagedIterable;
 import tukano.api.Blobs;
 import tukano.api.Result;
 import tukano.api.Short;
@@ -99,26 +96,22 @@ public class JavaShorts implements Shorts {
 				});
 			});
 		} else {
-			return null;
-			/*
 			return errorOrResult( getShort(shortId), shrt -> {
 
-				return errorOrResult( okUser( shrt.getOwnerId(), password), user -> {
-					return DB.transactionNoSQL( cosmos -> {
+				DB.deleteOne(shrt);
 
-						cosmos.deleteItem(shrt, new CosmosItemRequestOptions()).getItem();
+				String query = format("SELECT * FROM l WHERE l.shortId = '%s'", shortId);
+				List<Map> likesList = DB.sqlDB(query, Map.class, Likes.class);
 
-						String query = format("SELECT * FROM Likes l WHERE l.shortId = '%s'", shortId);
-						CosmosPagedIterable<Likes> likesToDelete = cosmos.queryItems(query, new CosmosQueryRequestOptions(), Likes.class);
+				for (Map likeData : likesList) {
+					Likes like = new Likes();
+					like.setLikesId((String) likeData.get("id"));
+					DB.deleteOne(like);
+				}
 
-						for (Likes like : likesToDelete.stream().toList()) {
-							cosmos.deleteItem(like, new CosmosItemRequestOptions()).getItem();
-						}
-
-						JavaBlobs.getInstance().delete(shrt.getBlobUrl(), Token.get() );
-					});
-				});
-			});*/
+				tukano.impl.JavaBlobs.getInstance().delete(shrt.getBlobUrl(), tukano.impl.Token.get() );
+                return ok();
+            });
 		}
 	}
 
@@ -156,8 +149,20 @@ public class JavaShorts implements Shorts {
 	public Result<List<String>> followers(String userId, String password) {
 		Log.info(() -> format("followers : userId = %s, pwd = %s\n", userId, password));
 
-		var query = format("SELECT f.follower FROM Following f WHERE f.followee = '%s'", userId);		
-		return errorOrValue( okUser(userId, password), DB.sql(query, String.class));
+		if (DB.usePostegre){
+			var query = format("SELECT f.follower FROM Following f WHERE f.followee = '%s'", userId);
+			return errorOrValue( okUser(userId, password), DB.sql(query, String.class));
+		} else {
+			var query = format("SELECT f.follower FROM f WHERE f.followee = '%s'", userId);
+			var result = DB.sqlDB( query, Map.class, Following.class);
+
+			List<String> resultsList = result.stream()
+					.map(map -> (String) map.get("follower"))
+					.toList();
+
+			return errorOrValue( okUser(userId, password), resultsList);
+		}
+
 	}
 
 	@Override
@@ -175,12 +180,27 @@ public class JavaShorts implements Shorts {
 	public Result<List<String>> likes(String shortId, String password) {
 		Log.info(() -> format("likes : shortId = %s, pwd = %s\n", shortId, password));
 
-		return errorOrResult( getShort(shortId), shrt -> {
-			
-			var query = format("SELECT l.userId FROM Likes l WHERE l.shortId = '%s'", shortId);					
-			
-			return errorOrValue( okUser( shrt.getOwnerId(), password ), DB.sql(query, String.class));
-		});
+		if (DB.usePostegre){
+			return errorOrResult( getShort(shortId), shrt -> {
+
+				var query = format("SELECT l.userId FROM Likes l WHERE l.shortId = '%s'", shortId);
+
+				return errorOrValue( okUser( shrt.getOwnerId(), password ), DB.sql(query, String.class));
+			});
+		} else {
+			return errorOrResult( getShort(shortId), shrt -> {
+
+				var query = format("SELECT l.userId FROM l WHERE l.shortId = '%s'", shortId);
+				var result = DB.sqlDB(query, Map.class, Likes.class);
+
+				List<String> resultsList = result.stream()
+						.map(map -> (String) map.get("userId"))
+						.toList();
+
+				return errorOrValue( okUser( shrt.getOwnerId(), password ), resultsList);
+			});
+		}
+
 	}
 
 	@Override
@@ -236,39 +256,34 @@ public class JavaShorts implements Shorts {
 			});
 		} else {
 
-			return null;
-			/*
-			// transaction should be changed if we are using NoSQL
-			return DB.transactionNoSQL( (cosmos) -> {
+			var queryShorts = format("SELECT * FROM s WHERE s.ownerId = '%s'", userId);
+			List<Map> shortsToDelete = sqlDB(queryShorts, Map.class, Short.class);
 
-				//delete shorts
-				var queryShorts = format("SELECT * FROM Short s WHERE s.ownerId = '%s'", userId);
-				var shortsToDelete = cosmos.queryItems(queryShorts, new CosmosQueryRequestOptions(), Short.class);
+			for (Map shortsData : shortsToDelete) {
+				Short st = new Short();
+				st.setShortId((String) shortsData.get("id"));
+				DB.deleteOne(st);
+			}
 
-				for (Short s : shortsToDelete.stream().toList()) {
-					cosmos.deleteItem(s, new CosmosItemRequestOptions()).getItem();
-				}
+			var queryFollow = format("SELECT * FROM f WHERE f.follower = '%s' OR f.followee = '%s'", userId, userId);
+			List<Map> followToDelete = sqlDB(queryFollow, Map.class, Following.class);
 
-				//delete follows
-				var queryFollows = format("SELECT * FROM Following f WHERE f.follower = '%s' OR f.followee = '%s'", userId, userId);
-				var followsToDelete = cosmos.queryItems(queryFollows, new CosmosQueryRequestOptions(), Following.class);
+			for (Map followData : followToDelete) {
+				Following fll = new Following();
+				fll.setFollowingId((String) followData.get("id"));
+				DB.deleteOne(fll);
+			}
 
-				for (Following f : followsToDelete.stream().toList()) {
-					cosmos.deleteItem(f, new CosmosItemRequestOptions()).getItem();
-				}
+			var queryLikes = format("SELECT * FROM l WHERE l.ownerId = '%s' OR l.userId = '%s'", userId, userId);
+			List<Map> likesList = DB.sqlDB(queryLikes, Map.class, Likes.class);
 
-				//delete likes
+			for (Map likeData : likesList) {
+				Likes like = new Likes();
+				like.setLikesId((String) likeData.get("id"));
+				DB.deleteOne(like);
+			}
 
-				var queryLikes = format("SELECT * FROM Likes l WHERE l.ownerId = '%s' OR l.userId = '%s'", userId, userId);
-				var likesToDelete = cosmos.queryItems(queryLikes, new CosmosQueryRequestOptions(), Likes.class);
-
-				for (Likes l : likesToDelete.stream().toList()) {
-					cosmos.deleteItem(l, new CosmosItemRequestOptions()).getItem();
-				}
-			});*/
+			return ok();
 		}
-
-
 	}
-	
 }

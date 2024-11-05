@@ -36,6 +36,10 @@ public class Likes {
 		this.ownerId = ownerId;
 	}
 
+	public void setLikesId(String id) {
+		this.id = id;
+	}
+
 	public String getUserId() {
 		return userId;
 	}
@@ -74,6 +78,5 @@ public class Likes {
 		return Objects.equals(ownerId, other.ownerId) && Objects.equals(shortId, other.shortId)
 				&& Objects.equals(userId, other.userId);
 	}
-	
-	
+
 }

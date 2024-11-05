@@ -15,13 +15,17 @@ public class Following{
 
 	String followee;
 
-	Following() {}
+	public Following() {}
 
 	public Following(String follower, String followee) {
 		super();
 		this.id = followee + "-" + follower;
 		this.follower = follower;
 		this.followee = followee;
+	}
+
+	public void setFollowingId(String id) {
+		this.id = id;
 	}
 
 	public String getId() { return id; }
@@ -63,6 +67,4 @@ public class Following{
 	public String toString() {
 		return "Following [follower=" + follower + ", followee=" + followee + "]";
 	}
-	
-	
 }
