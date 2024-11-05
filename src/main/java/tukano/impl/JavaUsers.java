@@ -84,13 +84,26 @@ public class JavaUsers implements Users {
 	public Result<List<User>> searchUsers(String pattern) {
 		Log.info( () -> format("searchUsers : patterns = %s\n", pattern));
 
-		var query = format("SELECT * FROM User u WHERE UPPER(u.userId) LIKE '%%%s%%'", pattern.toUpperCase());
-		var hits = DB.sql(query, User.class)
-				.stream()
-				.map(User::copyWithoutPassword)
-				.toList();
+		if (DB.usePostegre){
+			var query = format("SELECT * FROM AppUser u WHERE UPPER(u.userId) LIKE '%%%s%%'", pattern.toUpperCase());
+			var hits = DB.sql(query, User.class)
+					.stream()
+					.map(User::copyWithoutPassword)
+					.toList();
 
-		return ok(hits);
+			return ok(hits);
+		} else {
+			String lowPattern = pattern.toLowerCase();
+			String query = format("SELECT * FROM User u WHERE CONTAINS(u.id, '%s')", lowPattern);
+
+			var hits = DB.sqlDB(query, User.class, User.class)
+					.stream()
+					.map(User::copyWithoutPassword)
+					.toList();
+
+			return ok(hits);
+		}
+
 	}
 
 	

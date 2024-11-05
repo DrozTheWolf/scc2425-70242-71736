@@ -8,36 +8,34 @@ import com.azure.cosmos.CosmosContainer;
 import org.hibernate.Session;
 import cloudUtils.NoSQLCosmos;
 import cloudUtils.NoSQLCosmosCache;
+import utils.Hibernate;
 
 import tukano.api.Result;
 
 public class DB {
 
-	public static final boolean useCache = true;
+	public static final boolean useCache = false;
 
 	// if false then use NoSQL
-	public static final boolean usePostegre = true;
+	public static final boolean usePostegre = false;
 
-
+	// use only with Postegre/Hibernate
 	public static <T> List<T> sql(String query, Class<T> clazz) {
-
-		if (usePostegre){
-			return useCache ? HibernateCache.getInstance().sql(query, clazz) : Hibernate.getInstance().sql(query, clazz);
-		} else {
-			return useCache ? NoSQLCosmosCache.getInstance().query(clazz, query).value() : NoSQLCosmos.getInstance().query(clazz, query).value();
-		}
+		return useCache ? HibernateCache.getInstance().sql(query, clazz) : Hibernate.getInstance().sql(query, clazz);
 	}
-	
+
+	// use only with CosmosDB/NoSQL
+	public static <T, Q> List<T> sqlDB(String query, Class<T> clazz, Class<Q> seeFrom) {
+		return useCache ? NoSQLCosmosCache.getInstance().query(clazz, query, seeFrom).value()
+				: NoSQLCosmos.getInstance().query(clazz, query, seeFrom).value();
+	}
+
+	// not in use
+	/*
 	public static <T> List<T> sql(Class<T> clazz, String fmt, Object ... args) {
-
-		if (usePostegre){
-			return useCache ? HibernateCache.getInstance().sql(String.format(fmt, args), clazz)
-					: Hibernate.getInstance().sql(String.format(fmt, args), clazz);
-		} else {
-			return null;
-		}
-
-	}
+		return useCache ? HibernateCache.getInstance().sql(String.format(fmt, args), clazz)
+				: Hibernate.getInstance().sql(String.format(fmt, args), clazz);
+	}*/
 	
 	public static <T> Result<T> getOne(String id, Class<T> clazz) {
 
@@ -85,12 +83,6 @@ public class DB {
 	public static <T> Result<T> transaction( Consumer<Session> c) {
 			return useCache ? HibernateCache.getInstance().execute( c::accept )
 					: Hibernate.getInstance().execute( c::accept );
-	}
-
-	// use this only for CosmosDBConnection/NoSQL
-	public static <T> Result<T> transactionNoSQL( Consumer<CosmosContainer> c) {
-		return useCache ? null
-				: NoSQLCosmos.getInstance().executeDB( c::accept );
 	}
 
 	public static <T> Result<T> transaction( Function<Session, Result<T>> func) {

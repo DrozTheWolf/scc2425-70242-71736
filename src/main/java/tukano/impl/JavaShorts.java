@@ -11,8 +11,10 @@ import static tukano.api.Result.ErrorCode.FORBIDDEN;
 import static utils.DB.getOne;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.azure.cosmos.models.CosmosItemRequestOptions;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
@@ -63,12 +65,15 @@ public class JavaShorts implements Shorts {
 		if( shortId == null )
 			return error(BAD_REQUEST);
 
-		var query = format("SELECT VALUE COUNT(1) FROM c WHERE c.shortId = '%s'", shortId);
+		List<Long> likes;
 		if(DB.usePostegre){
-			query = format("SELECT count(*) FROM Likes l WHERE l.shortId = '%s'", shortId);
+			var query = format("SELECT count(*) FROM Likes l WHERE l.shortId = '%s'", shortId);
+			likes = DB.sql(query, Long.class);
+		} else {
+			var query = format("SELECT VALUE COUNT(1) FROM l WHERE l.shortId = '%s'", shortId);
+			likes = DB.sqlDB(query, Long.class, Likes.class);
 		}
 
-		var likes = DB.sql(query, Long.class);
 		return errorOrValue( getOne(shortId, Short.class), shrt -> shrt.copyWithLikes_And_Token( likes.get(0)));
 	}
 
@@ -94,6 +99,8 @@ public class JavaShorts implements Shorts {
 				});
 			});
 		} else {
+			return null;
+			/*
 			return errorOrResult( getShort(shortId), shrt -> {
 
 				return errorOrResult( okUser( shrt.getOwnerId(), password), user -> {
@@ -111,7 +118,7 @@ public class JavaShorts implements Shorts {
 						JavaBlobs.getInstance().delete(shrt.getBlobUrl(), Token.get() );
 					});
 				});
-			});
+			});*/
 		}
 	}
 
@@ -119,12 +126,19 @@ public class JavaShorts implements Shorts {
 	public Result<List<String>> getShorts(String userId) {
 		Log.info(() -> format("getShorts : userId = %s\n", userId));
 
-		var query = format("SELECT s.shortId FROM Short s WHERE s.ownerId = '%s'", userId);
-		if(DB.usePostegre){
-			query = format("SELECT s.shortId FROM Short s WHERE s.ownerId = '%s'", userId);
-		}
+		if (DB.usePostegre){
+			String query = format("SELECT s.shortId FROM Short s WHERE s.ownerId = '%s'", userId);
+			return errorOrValue( okUser(userId), DB.sql( query, String.class));
+		} else {
+			String query = format("SELECT s.id FROM s WHERE s.ownerId = '%s'", userId);
+			var result = DB.sqlDB( query, Map.class, Short.class);
 
-		return errorOrValue( okUser(userId), DB.sql( query, String.class));
+			List<String> resultsList = result.stream()
+					.map(map -> (String) map.get("id"))
+					.toList();
+
+			return errorOrValue( okUser(userId), resultsList);
+		}
 	}
 
 	@Override
@@ -221,6 +235,9 @@ public class JavaShorts implements Shorts {
 
 			});
 		} else {
+
+			return null;
+			/*
 			// transaction should be changed if we are using NoSQL
 			return DB.transactionNoSQL( (cosmos) -> {
 
@@ -248,7 +265,7 @@ public class JavaShorts implements Shorts {
 				for (Likes l : likesToDelete.stream().toList()) {
 					cosmos.deleteItem(l, new CosmosItemRequestOptions()).getItem();
 				}
-			});
+			});*/
 		}
 
 
